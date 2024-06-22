@@ -4,35 +4,36 @@
 	{
 		static void Main(string[] args)
 		{
-			Console.Write("Введите размер массива: ");
-			int arraySize = int.Parse(Console.ReadLine());
+			IMyInterface myObject = new MyClass();
 
-			MyClass[] myArray = new MyClass[arraySize];
+			var obj = new IMyInterface[] {new  MyClass(), new MySecondClass(), new MyClass()};
 
-			Random random = new Random();
-			for (int i = 0; i < arraySize; i++)
+			foreach (var i in obj) 
 			{
-				int randomInt = random.Next(1, 101);
-				string randomString = "String" + randomInt;
-				myArray[i] = new MyClass(randomInt, randomString);
-			}
+				i.MethodA();
+            }
 
-			for (int i = 0; i < arraySize; i++)
-			{
-				Console.WriteLine($"Элемент {i}: Число = {myArray[i].Number}, Строка = {myArray[i].Text}");
-			}
 		}
 	}
 
-	class MyClass
+	public interface IMyInterface
 	{
-		public int Number { get; private set; }
-		public string Text { get; private set; }
+		void MethodA();
+		void MethodB();
+		void MethodC();
+	}
 
-		public MyClass(int number, string text)
-		{
-			Number = number;
-			Text = text;
-		}
+	public class MyClass : IMyInterface
+	{
+		public void MethodA() => Console.WriteLine("first MethodA");
+		public void MethodB() => Console.WriteLine("first MethodB");
+		public void MethodC() => Console.WriteLine("first MethodC");
+	}
+
+	public class MySecondClass : IMyInterface
+	{
+		public void MethodA() => Console.WriteLine("second MethodA");
+		public void MethodB() => Console.WriteLine("second MethodB");
+		public void MethodC() => Console.WriteLine("second MethodC");
 	}
 }
