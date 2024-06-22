@@ -4,35 +4,33 @@
 	{
 		static void Main(string[] args)
 		{
-			Console.Write("Введите размер массива: ");
-			int arraySize = int.Parse(Console.ReadLine());
+			MySecondClass derivedObject = new MySecondClass();
 
-			MyClass[] myArray = new MyClass[arraySize];
-
-			Random random = new Random();
-			for (int i = 0; i < arraySize; i++)
-			{
-				int randomInt = random.Next(1, 101);
-				string randomString = "String" + randomInt;
-				myArray[i] = new MyClass(randomInt, randomString);
-			}
-
-			for (int i = 0; i < arraySize; i++)
-			{
-				Console.WriteLine($"Элемент {i}: Число = {myArray[i].Number}, Строка = {myArray[i].Text}");
-			}
+			derivedObject.VirtualMethod();
+			derivedObject.AbstractMethod();
 		}
 	}
 
-	class MyClass
+	abstract class MyClass
 	{
-		public int Number { get; private set; }
-		public string Text { get; private set; }
-
-		public MyClass(int number, string text)
+		public virtual void VirtualMethod()
 		{
-			Number = number;
-			Text = text;
+			Console.WriteLine("Виртуальный метод базового класса");
+		}
+
+		public abstract void AbstractMethod();
+	}
+
+	class MySecondClass : MyClass
+	{
+		public override void VirtualMethod()
+		{
+			Console.WriteLine("Переопределенный виртуальный метод класса наследника");
+		}
+
+		public override void AbstractMethod()
+		{
+			Console.WriteLine("Реализованный абстрактный метод класса наследника");
 		}
 	}
 }
