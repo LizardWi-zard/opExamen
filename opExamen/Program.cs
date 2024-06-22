@@ -1,26 +1,30 @@
 ﻿namespace opExamen
 {
-	class Program
+    class Program
 	{
 		static void Main(string[] args)
 		{
-			Console.Write("Введите размер массива: ");
-			int arraySize = int.Parse(Console.ReadLine());
+			MyThirdClass<MyClass> genericInstance1 = new MyThirdClass<MyClass>(new MyClass(42, "Hello World"));
+			MyThirdClass<MySecondClass> genericInstance2 = new MyThirdClass<MySecondClass>(new MySecondClass(24, "MySecondClass"));
 
-			MyClass[] myArray = new MyClass[arraySize];
+			genericInstance1.PrintType();
+			genericInstance2.PrintType();
+		}
+	}
 
-			Random random = new Random();
-			for (int i = 0; i < arraySize; i++)
-			{
-				int randomInt = random.Next(1, 101);
-				string randomString = "String" + randomInt;
-				myArray[i] = new MyClass(randomInt, randomString);
-			}
+	class MyThirdClass<T> where T : MyClass
+	{
+		private T _item;
 
-			for (int i = 0; i < arraySize; i++)
-			{
-				Console.WriteLine($"Элемент {i}: Число = {myArray[i].Number}, Строка = {myArray[i].Text}");
-			}
+		public MyThirdClass(T item)
+		{
+			_item = item;
+		}
+
+		public void PrintType()
+		{
+			Console.WriteLine($"Тип данных: {typeof(T)}");
+			Console.WriteLine($"Значение: Number = {_item.Number}, Text = {_item.Text}");
 		}
 	}
 
@@ -35,4 +39,12 @@
 			Text = text;
 		}
 	}
-}
+
+	class MySecondClass : MyClass
+	{
+		public MySecondClass(int number, string text)
+			: base(number, text)
+		{
+		}
+	}
+}	
