@@ -1,38 +1,52 @@
-﻿namespace opExamen
+﻿using System.Diagnostics;
+
+namespace opExamen
 {
 	class Program
 	{
 		static void Main(string[] args)
 		{
-			Console.Write("Введите размер массива: ");
-			int arraySize = int.Parse(Console.ReadLine());
+			int X = 340; 
 
-			MyClass[] myArray = new MyClass[arraySize];
-
-			Random random = new Random();
-			for (int i = 0; i < arraySize; i++)
+			var tasks = new Task<(int, TimeSpan)>[10];
+			for (int i = 0; i < 10; i++)
 			{
-				int randomInt = random.Next(1, 101);
-				string randomString = "String" + randomInt;
-				myArray[i] = new MyClass(randomInt, randomString);
+				tasks[i] = Task.Run(() => GenerateAndProcessArray(X));
 			}
 
-			for (int i = 0; i < arraySize; i++)
-			{
-				Console.WriteLine($"Элемент {i}: Число = {myArray[i].Number}, Строка = {myArray[i].Text}");
-			}
+			Task.WaitAll(tasks);
+
+			List<TimeSpan> times = tasks.Select(t => t.Result.Item2).ToList();
+			TimeSpan minTime = times.Min();
+			TimeSpan maxTime = times.Max();
+			TimeSpan avgTime = TimeSpan.FromTicks((long)times.Average(t => t.Ticks));
+
+			Console.WriteLine($"Минимальное время выполнения: {minTime}");
+			Console.WriteLine($"Максимальное время выполнения: {maxTime}");
+			Console.WriteLine($"Среднее время выполнения: {avgTime}");
 		}
-	}
 
-	class MyClass
-	{
-		public int Number { get; private set; }
-		public string Text { get; private set; }
-
-		public MyClass(int number, string text)
+		static (int, TimeSpan) GenerateAndProcessArray(int X)
 		{
-			Number = number;
-			Text = text;
+			var random = new Random();
+			int size = random.Next(10000000, 15000001);
+
+            Console.WriteLine($"Размер массива: {size}");
+
+            var array = new int[size];
+			for (int i = 0; i < size; i++)
+			{
+				array[i] = random.Next(0, 1001);
+			}
+
+			var stopwatch = Stopwatch.StartNew();
+			
+			Array.Sort(array);
+
+			int count = array.Count(n => n == X);
+
+			stopwatch.Stop();
+			return (count, stopwatch.Elapsed);
 		}
 	}
 }
