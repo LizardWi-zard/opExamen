@@ -1,38 +1,33 @@
-﻿namespace opExamen
+﻿using System.Reflection;
+
+namespace opExamen
 {
 	class Program
 	{
 		static void Main(string[] args)
 		{
-			Console.Write("Введите размер массива: ");
-			int arraySize = int.Parse(Console.ReadLine());
+			// Создание экземпляра класса MyClass
+			MyClass myObject = new MyClass();
 
-			MyClass[] myArray = new MyClass[arraySize];
-
-			Random random = new Random();
-			for (int i = 0; i < arraySize; i++)
+			// Вызов приватного метода с использованием рефлексии
+			MethodInfo privateMethod = typeof(MyClass).GetMethod("PrivateMethod", BindingFlags.NonPublic | BindingFlags.Instance);
+			if (privateMethod != null)
 			{
-				int randomInt = random.Next(1, 101);
-				string randomString = "String" + randomInt;
-				myArray[i] = new MyClass(randomInt, randomString);
+				// Передача сообщения в приватный метод
+				privateMethod.Invoke(myObject, new object[] { "Hello from the private method!" });
 			}
-
-			for (int i = 0; i < arraySize; i++)
+			else
 			{
-				Console.WriteLine($"Элемент {i}: Число = {myArray[i].Number}, Строка = {myArray[i].Text}");
+				Console.WriteLine("Не удалось найти приватный метод.");
 			}
 		}
 	}
-
 	class MyClass
 	{
-		public int Number { get; private set; }
-		public string Text { get; private set; }
-
-		public MyClass(int number, string text)
+		// Приватный метод, выводящий сообщение на консоль
+		private void PrivateMethod(string message)
 		{
-			Number = number;
-			Text = text;
+			Console.WriteLine(message);
 		}
 	}
 }
