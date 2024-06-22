@@ -1,38 +1,77 @@
-﻿namespace opExamen
+﻿using System.Diagnostics;
+
+namespace opExamen
 {
 	class Program
 	{
-		static void Main(string[] args)
+		static readonly Random random = new Random();
+		static readonly object lockObject = new object();
+		static long totalWaitTime = 0;
+		static int countWaits = 0;
+		static long minWaitTime = long.MaxValue;
+		static long maxWaitTime = 0;
+
+		static void Main()
 		{
-			Console.Write("Введите размер массива: ");
-			int arraySize = int.Parse(Console.ReadLine());
+			int[] array = GenerateRandomArray();
+			Array.Sort(array);
 
-			MyClass[] myArray = new MyClass[arraySize];
+			int x = 500; // значение Х
+			int threadCount = 10;
+			Task[] tasks = new Task[threadCount];
 
-			Random random = new Random();
-			for (int i = 0; i < arraySize; i++)
+			for (int i = 0; i < threadCount; i++)
 			{
-				int randomInt = random.Next(1, 101);
-				string randomString = "String" + randomInt;
-				myArray[i] = new MyClass(randomInt, randomString);
+				tasks[i] = Task.Run(() => CountOccurrences(array, x));
 			}
 
-			for (int i = 0; i < arraySize; i++)
-			{
-				Console.WriteLine($"Элемент {i}: Число = {myArray[i].Number}, Строка = {myArray[i].Text}");
-			}
+			Task.WaitAll(tasks);
+
+			double averageWaitTime = countWaits > 0 ? totalWaitTime / (double)countWaits : 0;
+
+			Console.WriteLine($"Минимальное время ожидания: {minWaitTime} мс");
+			Console.WriteLine($"Максимальное время ожидания: {maxWaitTime} мс");
+			Console.WriteLine($"Среднее время ожидания: {averageWaitTime} мс");
+
 		}
-	}
 
-	class MyClass
-	{
-		public int Number { get; private set; }
-		public string Text { get; private set; }
-
-		public MyClass(int number, string text)
+		static int[] GenerateRandomArray()
 		{
-			Number = number;
-			Text = text;
+			int length = random.Next(10_000_000, 15_000_001);
+			int[] array = new int[length];
+
+			for (int i = 0; i < length; i++)
+			{
+				array[i] = random.Next(0, 1001);
+			}
+
+			return array;
+		}
+
+		static void CountOccurrences(int[] array, int x)
+		{
+			Stopwatch stopwatch = new Stopwatch();
+
+			stopwatch.Start();
+			int count = 0;
+
+			lock (lockObject)
+			{
+				stopwatch.Stop();
+				long waitTime = stopwatch.ElapsedMilliseconds;
+
+				if (waitTime > 0)
+				{
+					Interlocked.Add(ref totalWaitTime, waitTime);
+					Interlocked.Increment(ref countWaits);
+					Interlocked.Exchange(ref minWaitTime, Math.Min(minWaitTime, waitTime));
+					Interlocked.Exchange(ref maxWaitTime, Math.Max(maxWaitTime, waitTime));
+				}
+
+				count = array.Count(value => value == x);
+			}
+
+			Console.WriteLine($"Количество элементов, равных {x}: {count}");
 		}
 	}
 }
