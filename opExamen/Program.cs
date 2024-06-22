@@ -4,35 +4,46 @@
 	{
 		static void Main(string[] args)
 		{
-			Console.Write("Введите размер массива: ");
-			int arraySize = int.Parse(Console.ReadLine());
+			MyClass myObject = new MyClass();
 
-			MyClass[] myArray = new MyClass[arraySize];
+			myObject.MyEvent += MyMethod;
 
-			Random random = new Random();
-			for (int i = 0; i < arraySize; i++)
-			{
-				int randomInt = random.Next(1, 101);
-				string randomString = "String" + randomInt;
-				myArray[i] = new MyClass(randomInt, randomString);
-			}
+			// Вызов события
+			myObject.RaiseEvent(50);
 
-			for (int i = 0; i < arraySize; i++)
-			{
-				Console.WriteLine($"Элемент {i}: Число = {myArray[i].Number}, Строка = {myArray[i].Text}");
-			}
+			myObject.MyEvent -= MyMethod;
+
+			myObject.RaiseEvent(50);
+		}
+
+		// Метод, соответствующий сигнатуре void (int)
+		public static void MyMethod(int value)
+		{
+			Console.WriteLine($"MyMethod вызван с параметром: {value}");
 		}
 	}
 
 	class MyClass
 	{
-		public int Number { get; private set; }
-		public string Text { get; private set; }
+		private event Action<int> myEvent;
 
-		public MyClass(int number, string text)
+		public event Action<int> MyEvent
 		{
-			Number = number;
-			Text = text;
+			add
+			{
+				Console.WriteLine("Метод подписан на событие.");
+				myEvent += value;
+			}
+			remove
+			{
+				Console.WriteLine("Метод отписан от события.");
+				myEvent -= value;
+			}
+		}
+
+		public void RaiseEvent(int value)
+		{
+			myEvent?.Invoke(value);
 		}
 	}
 }
