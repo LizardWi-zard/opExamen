@@ -4,35 +4,27 @@
 	{
 		static void Main(string[] args)
 		{
-			Console.Write("Введите размер массива: ");
-			int arraySize = int.Parse(Console.ReadLine());
+			MyClass obj1 = new MyClass { Num1 = 5, Num2 = 10 };
+			MyClass obj2 = new MyClass { Num1 = 15, Num2 = 20 };
 
-			MyClass[] myArray = new MyClass[arraySize];
+			MyClass result = obj1 + obj2;
 
-			Random random = new Random();
-			for (int i = 0; i < arraySize; i++)
-			{
-				int randomInt = random.Next(1, 101);
-				string randomString = "String" + randomInt;
-				myArray[i] = new MyClass(randomInt, randomString);
-			}
-
-			for (int i = 0; i < arraySize; i++)
-			{
-				Console.WriteLine($"Элемент {i}: Число = {myArray[i].Number}, Строка = {myArray[i].Text}");
-			}
+			Console.WriteLine($"Результат сложения: Property1 = {result.Num1}, Property2 = {result.Num2}");
 		}
 	}
 
 	class MyClass
 	{
-		public int Number { get; private set; }
-		public string Text { get; private set; }
+		public int Num1 { get; set; }
+		public int Num2 { get; set; }
 
-		public MyClass(int number, string text)
+		public static MyClass operator +(MyClass a, MyClass b)
 		{
-			Number = number;
-			Text = text;
+			return new MyClass
+			{
+				Num1 = a.Num1 + b.Num1,
+				Num2 = a.Num2 + b.Num2
+			};
 		}
 	}
 }
