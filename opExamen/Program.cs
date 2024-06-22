@@ -2,37 +2,35 @@
 {
 	class Program
 	{
+		public delegate void Delegate1(int number, string text, bool flag);
+		public delegate int Delegate2(int[] numbers, double multiplier);
+
 		static void Main(string[] args)
 		{
-			Console.Write("Введите размер массива: ");
-			int arraySize = int.Parse(Console.ReadLine());
+			Delegate1 del1 = new Delegate1(Method1);
+			Delegate2 del2 = new Delegate2(Method2);
 
-			MyClass[] myArray = new MyClass[arraySize];
+			del1(42, "Hello, world!", true);
+			int result = del2(new int[] { 1, 2, 3, 4, 5 }, 2.5);
 
-			Random random = new Random();
-			for (int i = 0; i < arraySize; i++)
-			{
-				int randomInt = random.Next(1, 101);
-				string randomString = "String" + randomInt;
-				myArray[i] = new MyClass(randomInt, randomString);
-			}
-
-			for (int i = 0; i < arraySize; i++)
-			{
-				Console.WriteLine($"Элемент {i}: Число = {myArray[i].Number}, Строка = {myArray[i].Text}");
-			}
+			Console.WriteLine($"Результат выполнения делегата Delegate2: {result}");
 		}
-	}
 
-	class MyClass
-	{
-		public int Number { get; private set; }
-		public string Text { get; private set; }
-
-		public MyClass(int number, string text)
+		public static void Method1(int number, string text, bool flag)
 		{
-			Number = number;
-			Text = text;
+			Console.WriteLine($"Number: {number}, Text: {text}, Flag: {flag}");
+		}
+
+		public static int Method2(int[] numbers, double multiplier)
+		{
+			int sum = 0;
+
+			foreach (int number in numbers)
+			{
+				sum += (int)(number * multiplier);
+			}
+
+			return sum;
 		}
 	}
 }
