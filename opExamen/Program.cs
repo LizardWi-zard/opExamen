@@ -9,7 +9,7 @@ namespace opExamen
 		private static AutoResetEvent enterPressed = new AutoResetEvent(false);
 		static void Main(string[] args)
 		{
-			ThreadPool.QueueUserWorkItem(new WaitCallback(RunInfiniteLoop));
+			ThreadPool.QueueUserWorkItem(state => RunInfiniteLoop());
 
 			Console.WriteLine("Press Enter to trigger the message. Press 'q' and Enter to quit.");
 
@@ -27,7 +27,7 @@ namespace opExamen
 			}
 		}
 
-		static void RunInfiniteLoop(object state)
+		static void RunInfiniteLoop()
 		{
 			while (true)
 			{
