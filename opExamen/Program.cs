@@ -1,52 +1,69 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace opExamen
 {
 	class Program
 	{
-		static void Main(string[] args)
+		static public long ProcessArray(int NumberToFind)
 		{
-			int X = 340; 
+			Stopwatch time = new Stopwatch();
+			Random rnd = new Random();
 
-			var tasks = new Task<(int, TimeSpan)>[10];
-			for (int i = 0; i < 10; i++)
-			{
-				tasks[i] = Task.Run(() => GenerateAndProcessArray(X));
-			}
+			time.Start();
+			int size = rnd.Next(10_000_000, 15_000_001);
 
-			Task.WaitAll(tasks);
+			int[] arr = new int[size];
 
-			List<TimeSpan> times = tasks.Select(t => t.Result.Item2).ToList();
-			TimeSpan minTime = times.Min();
-			TimeSpan maxTime = times.Max();
-			TimeSpan avgTime = TimeSpan.FromTicks((long)times.Average(t => t.Ticks));
-
-			Console.WriteLine($"Минимальное время выполнения: {minTime}");
-			Console.WriteLine($"Максимальное время выполнения: {maxTime}");
-			Console.WriteLine($"Среднее время выполнения: {avgTime}");
-		}
-
-		static (int, TimeSpan) GenerateAndProcessArray(int X)
-		{
-			var random = new Random();
-			int size = random.Next(10000000, 15000001);
-
-            Console.WriteLine($"Размер массива: {size}");
-
-            var array = new int[size];
 			for (int i = 0; i < size; i++)
 			{
-				array[i] = random.Next(0, 1001);
+				arr[i] = rnd.Next(0, 1001);
 			}
 
-			var stopwatch = Stopwatch.StartNew();
+			Array.Sort(arr);
+
+			int count = Array.FindAll(arr, (item => item == NumberToFind)).Length;
+
+			time.Stop();
+
+			return time.ElapsedMilliseconds;
+		}
+
+		static void Main(string[] args)
+		{
+			int NumberToFind = 461;
+			int NumberOfThreads = 10;
+
+			long[] time = new long[NumberOfThreads];
 			
-			Array.Sort(array);
+			ConcurrentBag<long> times = new ConcurrentBag<long>();
+			
+			Thread[] threads = new Thread[NumberOfThreads];
 
-			int count = array.Count(n => n == X);
 
-			stopwatch.Stop();
-			return (count, stopwatch.Elapsed);
+			for (int i = 0; i < NumberOfThreads; i++)
+			{
+				threads[i] = new Thread(new ThreadStart(() => times.Add(ProcessArray(NumberToFind))));
+				threads[i].Start();
+			}
+
+			foreach (var thread in threads)
+			{
+				thread.Join();
+			}
+
+			time = times.ToArray();
+
+			for (int i = 0; i < NumberOfThreads; i++)
+			{
+				Console.WriteLine(time[i]);
+			}
+
+			Console.WriteLine("\n");
+			Console.WriteLine($"Минимальное время выполнения: {time.Max()}");
+			Console.WriteLine($"Максимальное время выполнения: {time.Min()}");
+			Console.WriteLine($"Среднее время выполнения: {time.Sum() / NumberOfThreads}");
+
 		}
 	}
 }
