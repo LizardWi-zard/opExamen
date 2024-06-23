@@ -1,38 +1,40 @@
-﻿namespace opExamen
+﻿using System;
+using System.Threading;
+
+namespace opExamen
 {
+
 	class Program
 	{
+		private static AutoResetEvent enterPressed = new AutoResetEvent(false);
 		static void Main(string[] args)
 		{
-			Console.Write("Введите размер массива: ");
-			int arraySize = int.Parse(Console.ReadLine());
+			ThreadPool.QueueUserWorkItem(new WaitCallback(RunInfiniteLoop));
 
-			MyClass[] myArray = new MyClass[arraySize];
+			Console.WriteLine("Press Enter to trigger the message. Press 'q' and Enter to quit.");
 
-			Random random = new Random();
-			for (int i = 0; i < arraySize; i++)
+			while (true)
 			{
-				int randomInt = random.Next(1, 101);
-				string randomString = "String" + randomInt;
-				myArray[i] = new MyClass(randomInt, randomString);
-			}
+				string input = Console.ReadLine();
+			
+				if (input.ToLower() == "q")
+				{
+					break;
 
-			for (int i = 0; i < arraySize; i++)
-			{
-				Console.WriteLine($"Элемент {i}: Число = {myArray[i].Number}, Строка = {myArray[i].Text}");
+				}
+
+				enterPressed.Set();
 			}
 		}
-	}
 
-	class MyClass
-	{
-		public int Number { get; private set; }
-		public string Text { get; private set; }
-
-		public MyClass(int number, string text)
+		static void RunInfiniteLoop(object state)
 		{
-			Number = number;
-			Text = text;
+			while (true)
+			{
+				enterPressed.WaitOne();
+
+				Console.WriteLine("Enter key pressed. Message displayed.");
+			}
 		}
 	}
 }
