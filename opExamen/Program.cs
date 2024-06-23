@@ -1,38 +1,59 @@
-﻿namespace opExamen
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
+
+namespace opExamen
 {
 	class Program
 	{
 		static void Main(string[] args)
 		{
-			Console.Write("Введите размер массива: ");
-			int arraySize = int.Parse(Console.ReadLine());
-
-			MyClass[] myArray = new MyClass[arraySize];
-
-			Random random = new Random();
-			for (int i = 0; i < arraySize; i++)
+			using (UniversityContext db = new UniversityContext())
 			{
-				int randomInt = random.Next(1, 101);
-				string randomString = "String" + randomInt;
-				myArray[i] = new MyClass(randomInt, randomString);
+				University university = db.Universities.Find(1);
+
+				Student student = new Student() { name = "Daniel", university = university };
+				db.Students.Add(student);
+				var students = db.Students.ToList();
+
+				Console.WriteLine(university.name + " " + university.students.FirstOrDefault().name);
 			}
 
-			for (int i = 0; i < arraySize; i++)
-			{
-				Console.WriteLine($"Элемент {i}: Число = {myArray[i].Number}, Строка = {myArray[i].Text}");
-			}
 		}
 	}
 
-	class MyClass
+	public class UniversityContext : DbContext
 	{
-		public int Number { get; private set; }
-		public string Text { get; private set; }
+		public DbSet<Student> Students { get; set; }
+		public DbSet<University> Universities { get; set; }
 
-		public MyClass(int number, string text)
+		public UniversityContext()
 		{
-			Number = number;
-			Text = text;
+			Database.EnsureCreated();
 		}
+		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+		{
+			optionsBuilder.UseNpgsql("Server=localhost;Port=5432;Database=Example;Username=postgres;Password=1928");
+			optionsBuilder.UseLazyLoadingProxies();
+		}
+	}
+
+	public class Student
+	{
+		[Key]
+		public int id { get; set; }
+
+		public string name { get; set; }
+
+		public virtual University university { get; set; }
+	}
+
+	public class University
+	{
+		[Key]
+		public int id { get; set; }
+
+		public string name { get; set; }
+
+		public virtual List<Student> students { get; set; }
 	}
 }
