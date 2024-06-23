@@ -1,77 +1,76 @@
-﻿using System.Diagnostics;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics;
 
 namespace opExamen
 {
 	class Program
 	{
-		static readonly Random random = new Random();
-		static readonly object lockObject = new object();
-		static long totalWaitTime = 0;
-		static int countWaits = 0;
-		static long minWaitTime = long.MaxValue;
-		static long maxWaitTime = 0;
 
-		static void Main()
+		static object _lock = new object();
+
+		static public long ProcessArray(int NumberToFind)
 		{
-			int[] array = GenerateRandomArray();
-			Array.Sort(array);
+			Stopwatch time = new Stopwatch();
+			Random rnd = new Random();
 
-			int x = 500; // значение Х
-			int threadCount = 10;
-			Task[] tasks = new Task[threadCount];
+			int size = rnd.Next(10000000, 15000001);
 
-			for (int i = 0; i < threadCount; i++)
+			int[] arr = new int[size];
+
+			for (int i = 0; i < size; i++)
 			{
-				tasks[i] = Task.Run(() => CountOccurrences(array, x));
+				arr[i] = rnd.Next(0, 1001);
 			}
 
-			Task.WaitAll(tasks);
+			Array.Sort(arr);
 
-			double averageWaitTime = countWaits > 0 ? totalWaitTime / (double)countWaits : 0;
+			time.Start();
 
-			Console.WriteLine($"Минимальное время ожидания: {minWaitTime} мс");
-			Console.WriteLine($"Максимальное время ожидания: {maxWaitTime} мс");
-			Console.WriteLine($"Среднее время ожидания: {averageWaitTime} мс");
+			lock (_lock)
+			{
+				int count = Array.FindAll(arr, (item => item == NumberToFind)).Length;
+			}
+
+			time.Stop();
+
+			return time.ElapsedMilliseconds;
 
 		}
 
-		static int[] GenerateRandomArray()
+		static void Main(string[] args)
 		{
-			int length = random.Next(10_000_000, 15_000_001);
-			int[] array = new int[length];
 
-			for (int i = 0; i < length; i++)
+			int NumberToFind = 431, NumberOfThreads = 10;
+			long[] time = new long[NumberOfThreads];
+			ConcurrentBag<long> times = new ConcurrentBag<long>();
+			Thread[] threads = new Thread[NumberOfThreads];
+
+
+			for (int i = 0; i < NumberOfThreads; i++)
 			{
-				array[i] = random.Next(0, 1001);
+				threads[i] = new Thread(new ThreadStart(() => times.Add(ProcessArray(NumberToFind))));
+				threads[i].Start();
 			}
 
-			return array;
-		}
-
-		static void CountOccurrences(int[] array, int x)
-		{
-			Stopwatch stopwatch = new Stopwatch();
-
-			stopwatch.Start();
-			int count = 0;
-
-			lock (lockObject)
+			foreach (var thread in threads)
 			{
-				stopwatch.Stop();
-				long waitTime = stopwatch.ElapsedMilliseconds;
-
-				if (waitTime > 0)
-				{
-					Interlocked.Add(ref totalWaitTime, waitTime);
-					Interlocked.Increment(ref countWaits);
-					Interlocked.Exchange(ref minWaitTime, Math.Min(minWaitTime, waitTime));
-					Interlocked.Exchange(ref maxWaitTime, Math.Max(maxWaitTime, waitTime));
-				}
-
-				count = array.Count(value => value == x);
+				thread.Join();
 			}
 
-			Console.WriteLine($"Количество элементов, равных {x}: {count}");
+			time = times.Where(x => x != 0).ToArray();
+
+			for (int i = 0; i < NumberOfThreads; i++)
+			{
+				Console.WriteLine(time[i]);
+			}
+
+			Console.WriteLine("\n");
+			Console.WriteLine($"Минимальное время выполнения: {time.Max()}");
+			Console.WriteLine($"Максимальное время выполнения: {time.Min()}");
+			Console.WriteLine($"Среднее время выполнения: {time.Sum() / NumberOfThreads}");
+
 		}
+
 	}
+
 }
