@@ -1,38 +1,43 @@
-﻿namespace opExamen
+﻿using Microsoft.EntityFrameworkCore;
+using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
+
+namespace opExamen
 {
 	class Program
 	{
-		static void Main(string[] args)
+		public void Main(string[] args)
 		{
-			Console.Write("Введите размер массива: ");
-			int arraySize = int.Parse(Console.ReadLine());
-
-			MyClass[] myArray = new MyClass[arraySize];
-
-			Random random = new Random();
-			for (int i = 0; i < arraySize; i++)
+			using (ShopContext db = new ShopContext())
 			{
-				int randomInt = random.Next(1, 101);
-				string randomString = "String" + randomInt;
-				myArray[i] = new MyClass(randomInt, randomString);
-			}
+				Car student = new Car { id = 1, brand = "mersedess" };
 
-			for (int i = 0; i < arraySize; i++)
-			{
-				Console.WriteLine($"Элемент {i}: Число = {myArray[i].Number}, Строка = {myArray[i].Text}");
+				db.Students.Add(student);
+				db.SaveChanges();
 			}
 		}
 	}
 
-	class MyClass
+	public class ShopContext : DbContext
 	{
-		public int Number { get; private set; }
-		public string Text { get; private set; }
+		public DbSet<Car> Students { get; set; }
 
-		public MyClass(int number, string text)
+		public ShopContext()
 		{
-			Number = number;
-			Text = text;
+			Database.EnsureCreated();
 		}
+
+		protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+		{
+			optionsBuilder.UseNpgsql("Server=localhost;Port=5432;Database=Cars;Username=postgres;Password=1928");
+		}
+	}
+
+	public class Car
+	{
+		[Key]
+		public int id { get; set; }
+
+		public string brand { get; set; }
 	}
 }
