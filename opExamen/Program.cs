@@ -1,69 +1,64 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 
 namespace opExamen
 {
 	class Program
 	{
-		static public long ProcessArray(int NumberToFind)
+		static Random random = new Random();
+
+		static void Main()
 		{
-			Stopwatch time = new Stopwatch();
-			Random rnd = new Random();
+			int X = 615;
 
-			time.Start();
-			int size = rnd.Next(10_000_000, 15_000_001);
+			var tasks = new Task<double>[10];
 
-			int[] arr = new int[size];
-
-			for (int i = 0; i < size; i++)
+			for (int i = 0; i < 10; i++)
 			{
-				arr[i] = rnd.Next(0, 1001);
+				tasks[i] = Task.Run(() => MeasureExecutionTime(X));
 			}
 
-			Array.Sort(arr);
+			Task.WaitAll(tasks);
 
-			int count = Array.FindAll(arr, (item => item == NumberToFind)).Length;
+			var executionTimes = tasks.Select(t => t.Result).ToArray();
+			double minTime = executionTimes.Min();
+			double maxTime = executionTimes.Max();
+			double avgTime = executionTimes.Average();
 
-			time.Stop();
-
-			return time.ElapsedMilliseconds;
+			Console.WriteLine($"Минимальное время выполнения: {minTime} мс");
+			Console.WriteLine($"Максимальное время выполнения: {maxTime} мс");
+			Console.WriteLine($"Среднее время выполнения: {avgTime} мс");
 		}
 
-		static void Main(string[] args)
+		static double MeasureExecutionTime(int X)
 		{
-			int NumberToFind = 461;
-			int NumberOfThreads = 10;
+			var stopwatch = new Stopwatch();
+			stopwatch.Start();
 
-			long[] time = new long[NumberOfThreads];
+			int[] array = GenerateArray();
+
+			int count = array.Count(n => n == X);
+
+			stopwatch.Stop();
+			double elapsedMilliseconds = stopwatch.Elapsed.TotalMilliseconds;
+
+			Console.WriteLine($"Время выполнения: {elapsedMilliseconds} мс, Найдено {count} элементов, равных {X}");
+
+			return elapsedMilliseconds;
+		}
+
+		static int[] GenerateArray()
+		{
+			int length = random.Next(10_000_000, 15_000_001);
+			int[] array = new int[length];
+
+			for (int i = 0; i < length; i++)
+			{
+				array[i] = random.Next(0, 1001);
+			}
+
+			Array.Sort(array);
 			
-			ConcurrentBag<long> times = new ConcurrentBag<long>();
-			
-			Thread[] threads = new Thread[NumberOfThreads];
-
-
-			for (int i = 0; i < NumberOfThreads; i++)
-			{
-				threads[i] = new Thread(new ThreadStart(() => times.Add(ProcessArray(NumberToFind))));
-				threads[i].Start();
-			}
-
-			foreach (var thread in threads)
-			{
-				thread.Join();
-			}
-
-			time = times.ToArray();
-
-			for (int i = 0; i < NumberOfThreads; i++)
-			{
-				Console.WriteLine(time[i]);
-			}
-
-			Console.WriteLine("\n");
-			Console.WriteLine($"Минимальное время выполнения: {time.Max()}");
-			Console.WriteLine($"Максимальное время выполнения: {time.Min()}");
-			Console.WriteLine($"Среднее время выполнения: {time.Sum() / NumberOfThreads}");
-
+			return array;
 		}
 	}
 }
